@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include "run.h"
+
+extern int run(int argc, char** command);
 
 int main(int argc, char** argv)
 {
