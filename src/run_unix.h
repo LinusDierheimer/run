@@ -7,7 +7,9 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <unistd.h>
+#include <string.h>
 #include <stdlib.h>
+#include <malloc.h>
 
 #include "run.h"
 
@@ -15,6 +17,36 @@ static const int ERROR_FORK_FAILED = 31;
 static const int ERROR_EXEC_RETURNED = 32;
 
 static void dummy_signal_handler(int signo) { return; }
+
+static void redirect_io(RunOptions* runOptions)
+{
+    if(runOptions->keepIO)
+        return;
+
+    int fd = open("/dev/null", O_RDWR, 0);
+
+    if(runOptions->showDebugInfos)
+        printf("[debug] using file descriptor /dev/null: %i\n", fd);
+
+    if (fd >= 0)
+    {
+        dup2(fd, STDIN_FILENO);
+        dup2(fd, STDOUT_FILENO);
+        dup2(fd, STDERR_FILENO);
+        if (fd > 2)
+        {
+            close (fd);
+        }
+    }
+    else
+    {
+        printf("[warning] open(\"/dev/null\", O_RDWR, 0) returned %i, closing streams\n", fd);
+        fclose(stdin);
+        fclose(stdout);
+        fclose(stderr);
+    }
+    
+}
 
 static int handle_parent(RunOptions* runOptions, int childpid)
 {
@@ -44,24 +76,49 @@ static int handle_child(RunOptions* runOptions)
 
     signal(SIGTERM, SIG_DFL);
 
-    if(runOptions->keepIO != true)
+    kill(getppid(), SIGTERM);
+
+    if(runOptions->terminal)
     {
-        int fd = open("/dev/null", O_RDWR, 0);
+        char* desktop = getenv("DESKTOP_SESSION");
+
         if(runOptions->showDebugInfos)
-            printf("[debug] using file descriptor /dev/null: %i\n", fd);
-        if (fd >= 0)
+            printf("[debug] using desktop environment: %s\n", desktop == NULL ? "NULL" : desktop);
+
+        if(desktop != NULL)
         {
-            dup2(fd, STDIN_FILENO);
-            dup2(fd, STDOUT_FILENO);
-            dup2(fd, STDERR_FILENO);
-            if (fd > 2)
+            char* console;
+
+            if(strcmp(desktop, "plasma") == 0)
+                console = "konsole";
+
+            if(runOptions->showDebugInfos)
+                printf("[debug] using console command: %s\n", console == NULL ? "NULL" : console);
+
+            if(console != NULL)
             {
-                close (fd);
+                redirect_io(runOptions);
+
+                if(runOptions->runAsRoot)
+                    execlp(console, console, "--separate", "--hold", "-e", "sudo", "sh", "-c", runOptions->command, NULL);
+                else
+                    execlp(console, console, "--separate", "--hold", "-e", "sh", "-c", runOptions->command, NULL);
+
+                return ERROR_EXEC_RETURNED;
+            }
+            else
+            {
+                puts("[warning] couldn't detect terminal. continuing without");
             }
         }
+        else
+        {
+            puts("[waring] couldn't detect desktop environment. continuing without terminal");
+        }
+        
     }
 
-    kill(getppid(), SIGTERM);
+    redirect_io(runOptions);
 
     if(runOptions->runAsRoot)
         execlp("sudo", "sudo", "sh", "-c", runOptions->command, NULL);

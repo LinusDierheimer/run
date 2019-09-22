@@ -11,6 +11,8 @@
     int(*run)(RunOptions*) = run_std;
 #endif
 
+static const int ERROR_NO_COMMAND = 20;
+
 int printHelp()
 {
     puts(
@@ -22,12 +24,14 @@ int printHelp()
         "\n"
         "commands:\n"
         "   --help,              -h: prints this message \n"
-        "   --keep-io,           -k: don't redirect io streams \n"
+        "   --keep-io,           -k: don't close / redirect to null io streams \n"
         "   --std-impl,          -s: uses the impl based on the standard library\n"
         "   --wait,              -w: waits until the called process finished\n"
         "   --exit-code,         -e: prints the exit code, automatically sets --wait\n"
-        "   --child-pid,         -c: prints the pid of the child process\n"
+        "   --pid,               -p: prints the pid of the child process\n"
         "   --root-user, --sudo, -r: executes the command as root user \n"
+        "   --terminal,          -t starts a new terminal for the process\n"
+        "   --command            -c everything after this flag is treated as command, so it should be last"
         "   --debug,             -d: show debug informations\n"
         "\n"
         "source:\n"
@@ -53,11 +57,14 @@ int main(int argc, char** argv)
         .printExitCode = false,
         .printChildPID = false,
         .runAsRoot = false,
+        .terminal = false
     };
 
     for(; argvIndex < argc; argvIndex++)
     {
-        if(strcmp(argv[argvIndex], "--help") == 0 || strcmp(argv[argvIndex], "-h") == 0)
+        if(strcmp(argv[argvIndex], "--command") == 0 || strcmp(argv[argvIndex], "-c") == 0)
+            break;
+        else if(strcmp(argv[argvIndex], "--help") == 0 || strcmp(argv[argvIndex], "-h") == 0)
             return printHelp(); //ends process
         else if(strcmp(argv[argvIndex], "--keep-io") == 0 || strcmp(argv[argvIndex], "-k") == 0)
             runOptions.keepIO = true;
@@ -69,10 +76,12 @@ int main(int argc, char** argv)
             runOptions.waitForFinish = true;
         else if(strcmp(argv[argvIndex], "--exit-code") == 0 || strcmp(argv[argvIndex], "-e") == 0)
             runOptions.printExitCode = true;
-        else if(strcmp(argv[argvIndex], "--child-pid") == 0 || strcmp(argv[argvIndex], "-c") == 0)
+        else if(strcmp(argv[argvIndex], "--pid") == 0 || strcmp(argv[argvIndex], "-p") == 0)
             runOptions.printChildPID = true;
         else if(strcmp(argv[argvIndex], "--root-user") == 0 || strcmp(argv[argvIndex], "--sudo") == 0 || strcmp(argv[argvIndex], "-r") == 0)
             runOptions.runAsRoot = true;
+        else if(strcmp(argv[argvIndex], "--terminal") == 0 || strcmp(argv[argvIndex], "-t") == 0)
+            runOptions.terminal = true;
         else
             break;
     }
@@ -89,12 +98,13 @@ int main(int argc, char** argv)
         printf("[debug] using printExitCode: %s\n", runOptions.printExitCode ? "true" : "false");
         printf("[debug] using printChildPID: %s\n", runOptions.printChildPID ? "true" : "false");
         printf("[debug] using runAsRoot: %s\n", runOptions.runAsRoot ? "true" : "false");
+        printf("[debug] using terminal: %s\n", runOptions.terminal ? "true" : "false");
     }
 
     if(argvIndex >= argc)
     {
         fprintf(stderr, "[error] run must be started with a command to execute\n");
-        return 0;
+        return ERROR_NO_COMMAND;
     }
 
     char buf[4096];

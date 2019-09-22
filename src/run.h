@@ -12,6 +12,7 @@ typedef struct RunOptions
     bool printExitCode;
     bool printChildPID;
     bool runAsRoot;
+    bool terminal;
 } RunOptions;
 
 #endif
