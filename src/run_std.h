@@ -10,6 +10,10 @@ int run_std(RunOptions* runOptions)
     if(runOptions->showDebugInfos)
         puts("[debug] using implementation: std");
 
+    #ifdef __unix__
+        puts("[warning] you seem to be on a unix platform, run has a special implementation for it which should be used, remove the --std-impl / -s flag to do so.");
+    #endif
+
     puts("[warning] the std impl blocks until end of started process");
 
     if(!runOptions->keepIO)

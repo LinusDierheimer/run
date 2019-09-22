@@ -31,7 +31,7 @@ int printHelp()
         "   --pid,               -p: prints the pid of the child process\n"
         "   --root-user, --sudo, -r: executes the command as root user \n"
         "   --terminal,          -t starts a new terminal for the process\n"
-        "   --command            -c everything after this flag is treated as command, so it should be last"
+        "   --command            -c everything after this flag is treated as command, so it should be last\n"
         "   --debug,             -d: show debug informations\n"
         "\n"
         "source:\n"
