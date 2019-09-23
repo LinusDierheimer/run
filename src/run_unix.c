@@ -1,5 +1,4 @@
-#ifndef RUN_INCLUDED_run_unix
-#define RUN_INCLUDED_run_unix
+#include "run.h"
 
 #include <sys/types.h>  
 #include <sys/stat.h>
@@ -10,8 +9,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <malloc.h>
-
-#include "run.h"
 
 static const int ERROR_FORK_FAILED = 31;
 static const int ERROR_EXEC_RETURNED = 32;
@@ -154,5 +151,3 @@ int run(RunOptions* runOptions)
     else
         return handle_parent(runOptions, ret);
 }
-
-#endif

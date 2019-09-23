@@ -15,4 +15,6 @@ typedef struct RunOptions
     bool terminal;
 } RunOptions;
 
+int run(RunOptions* runOptions);
+
 #endif

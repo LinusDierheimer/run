@@ -1,15 +1,8 @@
 #include <string.h>
 #include <stdio.h>
-#include <unistd.h>
 
 #include "run.h"
 #include "run_std.h"
-
-#ifdef __unix__
-    #include "run_unix.h"
-#else
-    int(*run)(RunOptions*) = run_std;
-#endif
 
 static const int ERROR_NO_COMMAND = 20;
 
@@ -94,7 +87,7 @@ int main(int argc, char** argv)
         printf("[debug] using showDebugInfos: true\n");
         printf("[debug] using keepIO: %s\n", runOptions.keepIO ? "true" : "false");
         printf("[debug] using stdImpl: %s\n", stdImpl ? "true" : "false");
-        printf("[debug] using waitForFinish: %s\n", wait ? "true" : "false");
+        printf("[debug] using waitForFinish: %s\n", runOptions.waitForFinish ? "true" : "false");
         printf("[debug] using printExitCode: %s\n", runOptions.printExitCode ? "true" : "false");
         printf("[debug] using printChildPID: %s\n", runOptions.printChildPID ? "true" : "false");
         printf("[debug] using runAsRoot: %s\n", runOptions.runAsRoot ? "true" : "false");
