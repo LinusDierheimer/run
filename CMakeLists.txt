@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
+project(run)
+
 if(UNIX)
 
 	add_executable(run 

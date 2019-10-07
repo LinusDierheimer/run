@@ -4,6 +4,8 @@
 #include "run.h"
 #include "run_std.h"
 
+#pragma warning(disable : 4996)
+
 static const int ERROR_NO_COMMAND = 20;
 
 int printHelp()
